@@ -1,0 +1,144 @@
+<?php
+// Connect to the database
+$host = "localhost";
+$user = "username";
+$pass = "password";
+$db = "database";
+$conn = mysqli_connect($host, $user, $pass, $db);
+
+// Query the database and fetch the data
+$result = mysqli_query($conn, "SELECT id, name FROM countries");
+$data = array();
+while ($row = mysqli_fetch_assoc($result)) {
+  $data[] = $row;
+}
+
+// Return the data as JSON
+header('Content-Type: application/json');
+echo json_encode($data);
+?>
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class MyDropdownList extends StatefulWidget {
+  @override
+  _MyDropdownListState createState() => _MyDropdownListState();
+}
+
+class _MyDropdownListState extends State<MyDropdownList> {
+  List<dynamic> _data = [];
+
+  Future<void> _getData() async {
+    final response = await http.get(Uri.parse('http://example.com/my-script.php'));
+    if (response.statusCode == 200) {
+      setState(() {
+        _data = jsonDecode(response.body);
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton(
+      items: _data.map((item) {
+        return DropdownMenuItem(
+          value: item['id'],
+          child: Text(item['name']),
+        );
+      }).toList(),
+      onChanged: (value) {
+        // Do something with the selected value
+      },
+    );
+  }
+}
+class NoteList extends StatefulWidget {
+  @override
+  _NoteListState createState() => _NoteListState();
+}
+
+class _NoteListState extends State<NoteList> {
+  late Future<List<Map<String, dynamic>>> _future;
+
+  Future<List<Map<String, dynamic>>> fetchNotes() async {
+    final response = await http.get(Uri.parse('http://your-api-url/notes.php'));
+
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(jsonData);
+    } else {
+      throw Exception('Failed to fetch notes');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _future = fetchNotes();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _future,
+      builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No notes found'));
+        } else {
+          final notes = snapshot.data!;
+          return ReorderableListView(
+            children: List.generate(
+              notes.length,
+              (index) {
+                final note = notes[index];
+                return Card(
+                  key: ValueKey(note['id']),
+                  child: ListTile(
+                    title: Text(note['title']),
+                    subtitle: Text(note['body']),
+                  ),
+                );
+              },
+            ),
+            onReorder: (oldIndex, newIndex) {
+              // handle reordering of notes
+            },
+          );
+        }
+      },
+    );
+  }
+}
+// Connect to the database
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Retrieve the notes from the database
+$sql = "SELECT id, title, body FROM notes";
+$result = $conn->query($sql);
+
+// Convert the results to an array
+$notes = array();
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $notes[] = $row;
+    }
+}
+
+// Return the notes as JSON
+echo json_encode($notes);
