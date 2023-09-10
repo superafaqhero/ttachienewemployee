@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -79,17 +80,49 @@ class NoteDetailState extends State<NoteDetailapi> {
 
 
   List<Map<String, dynamic>> _imageDetails = [];
+  var permissionGranted = false;
 
   List<Widget> _selectedImagesn = [];
   List<File> _selectedImages = [];
   final String uploadUrl = '${ApiConstants.baseUrl}upload_images.php';
   final String fetchImagesUrl = '${ApiConstants.baseUrl}fetch_images.php';
-  Future<void> _pickImages() async {
-    final hasPermission = await Permission.storage.request();
 
-    if (hasPermission.isGranted) {
+  Future<void> _getStoragePermission() async {
+    DeviceInfoPlugin plugin = DeviceInfoPlugin();
+    AndroidDeviceInfo android = await plugin.androidInfo;
+    if (android.version.sdkInt < 33) {
+      if (await Permission.storage.request().isGranted) {
+        setState(() {
+          permissionGranted = true;
+        });
+      } else if (await Permission.storage.request().isPermanentlyDenied) {
+        await openAppSettings();
+      } else if (await Permission.audio.request().isDenied) {
+        setState(() {
+          permissionGranted = false;
+        });
+      }
+    } else {
+      if (await Permission.photos.request().isGranted) {
+        setState(() {
+          permissionGranted = true;
+        });
+      } else if (await Permission.photos.request().isPermanentlyDenied) {
+        await openAppSettings();
+      } else if (await Permission.photos.request().isDenied) {
+        setState(() {
+          permissionGranted = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickImages() async {
+    // final hasPermission = await Permission.storage.request();
+    _getStoragePermission();
+    if (permissionGranted = true) {
       final ImagePicker picker = ImagePicker();
-    final   List<XFile> images = await picker.pickMultipleMedia();
+      final   List<XFile> images = await picker.pickMultipleMedia();
       if (images != null) {
         setState(() {
           _selectedImages = images.map((image) => File(image.path)).toList();
@@ -103,7 +136,7 @@ class NoteDetailState extends State<NoteDetailapi> {
           uploadImages();
         }
       }
-    } else if (hasPermission.isPermanentlyDenied) {
+    } else if (permissionGranted = false) {
       _showPermissionDeniedDialog(context);
     }
   }
