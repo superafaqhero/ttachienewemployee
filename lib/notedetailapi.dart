@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:fast_cached_network_image/fast_cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
@@ -271,10 +272,43 @@ print(fileExtension);
               bool isVideo = _isVideoUrl(url);
               return isVideo
                   ?  _buildVideoPlayer(url)
-                  :FadeInImage.assetNetwork(
-                placeholder: 'assets/spinner2.gif',
-                image: "${ApiConstants.baseUrl}" + url,
+                  :
+              SizedBox(
+                height: 150,
+                width: 150,
+                child: FastCachedImage(
+                  url: "${ApiConstants.baseUrl}" + url,
+                  fit: BoxFit.cover,
+                  fadeInDuration: const Duration(seconds: 1),
+                  errorBuilder: (context, exception, stacktrace) {
+                    return Text(stacktrace.toString());
+                  },
+                  loadingBuilder: (context, progress) {
+                    return Container(
+                      color: Colors.yellow,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          if (progress.isDownloading && progress.totalBytes != null)
+                            Text('${progress.downloadedBytes ~/ 1024} / ${progress.totalBytes! ~/ 1024} kb',
+                                style: const TextStyle(color: Colors.red)),
+
+                          SizedBox(
+                              width: 120,
+                              height: 120,
+                              child:
+                              CircularProgressIndicator(color: Colors.red, value: progress.progressPercentage.value)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               );
+
+              // FadeInImage.assetNetwork(
+              //   placeholder: 'assets/spinner2.gif',
+              //   image: "${ApiConstants.baseUrl}" + url,
+              // );
             }).toList();
 
 

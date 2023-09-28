@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:line_icons/line_icons.dart';
 
+import 'api_constants.dart';
+
 class PasswordResetPage extends StatefulWidget {
   @override
   _PasswordResetPageState createState() => _PasswordResetPageState();
@@ -12,7 +14,7 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
   final TextEditingController _emailController = TextEditingController();
 
   Future<void> sendPasswordResetEmail(String email) async {
-    final url = Uri.parse('https://allfreehub.com/mailtest/emailtest.php');
+    final url = Uri.parse('${ApiConstants.baseUrl}mailtest/emailtest.php');
 
     try {
       final response = await http.post(url, body: {'email': email});

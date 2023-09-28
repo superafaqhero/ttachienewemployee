@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:auto_size_text_field/auto_size_text_field.dart';
+import 'package:fast_cached_network_image/fast_cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -662,11 +663,46 @@ class CustomTabsState extends State<CustomTabView>
                                             //   width: double.infinity, // Make the image as wide as its parent
                                             //   fit: BoxFit.cover, // Adjust the BoxFit as needed
                                             // ),
+                                            // if(imagePath.isNotEmpty)
+                                            //   FadeInImage.assetNetwork(
+                                            //     placeholder: 'assets/spinner2.gif',
+                                            //     image:"${ApiConstants.baseUrl}"+imagePath,
+                                            //   ),
                                             if(imagePath.isNotEmpty)
-                                              FadeInImage.assetNetwork(
-                                                placeholder: 'assets/spinner2.gif',
-                                                image:"${ApiConstants.baseUrl}"+imagePath,
+                                              SizedBox(
+                                                // height: 150,
+                                                // width: 150,
+                                                child: FastCachedImage(
+                                                  url: "${ApiConstants.baseUrl}"+imagePath,
+                                                  fit: BoxFit.cover,
+                                                  fadeInDuration: const Duration(seconds: 1),
+                                                  errorBuilder: (context, exception, stacktrace) {
+                                                    return Text(stacktrace.toString());
+                                                  },
+                                                  loadingBuilder: (context, progress) {
+                                                    return Container(
+                                                      color: Colors.yellow,
+                                                      child: Stack(
+                                                        alignment: Alignment.center,
+                                                        children: [
+                                                          if (progress.isDownloading && progress.totalBytes != null)
+                                                            Text('${progress.downloadedBytes ~/ 1024} / ${progress.totalBytes! ~/ 1024} kb',
+                                                                style: const TextStyle(color: Colors.red)),
+
+                                                          SizedBox(
+                                                              width: 120,
+                                                              height: 120,
+                                                              child:
+                                                              CircularProgressIndicator(color: Colors.red, value: progress.progressPercentage.value)),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
                                               ),
+
+
+
                                             // Text("filteredList[0].toString()"),
                                             ListTile(
                                               key: Key(matchedElements[index]['colId']),
