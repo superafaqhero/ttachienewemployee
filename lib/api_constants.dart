@@ -1,3 +1,3 @@
 class ApiConstants {
-  static const String baseUrl = 'https://techie.allfictionhub.com/api/';
+  static const String baseUrl = 'https://techie.poolforces.com/api/';
 }
